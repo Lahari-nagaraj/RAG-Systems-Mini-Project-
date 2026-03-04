@@ -1,0 +1,4 @@
+https://ollama.com/download
+
+python -m pip install streamlit sentence-transformers faiss-cpu pymupdf requests
+
