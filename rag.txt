@@ -1,4 +1,12 @@
-https://ollama.com/download
-
-python -m pip install streamlit sentence-transformers faiss-cpu pymupdf requests
-
+streamlit
+sentence-transformers
+faiss-cpu
+pymupdf
+requests
+langchain
+chromadb
+langchain-community
+pypdf
+langchain-text-splitters
+transformers
+torch

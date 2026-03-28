@@ -9,6 +9,7 @@ from rag.naive_pipeline import NaiveRAG
 text = load_pdf("sample.pdf")   # Put a small research PDF in project folder
 
 # Step 2: Chunk it
+
 chunks = chunk_text(text)
 
 # Step 3: Create embedding model
