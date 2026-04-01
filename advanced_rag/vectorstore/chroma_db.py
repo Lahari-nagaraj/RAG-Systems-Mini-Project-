@@ -21,3 +21,16 @@ def query(query_embedding, filter=None, k=5):
         n_results=k,
         where=filter
     )
+
+def clear_collection():
+    global collection
+    client.delete_collection("papers")
+    collection = client.get_or_create_collection(name="papers")
+
+def query_documents(query_embedding, k=3):
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=k
+    )
+    
+    return results["documents"][0]

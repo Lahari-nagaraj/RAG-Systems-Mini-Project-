@@ -1,9 +1,13 @@
 from llm.embedder import get_embedding
-from vectorstore.chroma_db import query
+from vectorstore.chroma_db import query_documents
 
-def search_papers(query_text):
-    embedding = get_embedding(query_text)
 
-    results = query(embedding, k=5)
+def retrieve(query, k=3):
+    # convert query → embedding
+    query_embedding = get_embedding(query)
 
-    return results["documents"]
+    # search vector DB
+    results = query_documents(query_embedding, k)
+
+    # return only documents (chunks)
+    return results
