@@ -1,80 +1,112 @@
+from groq import Groq
 import os
 from dotenv import load_dotenv
-import time
-load_dotenv()
 
-from groq import Groq
 from retrieval.filtered_retriever import retrieve
 from retrieval.reranker import rerank
-from ingestion.arxiv_search import search_arxiv_by_query
-from ingestion.ingest import ingest_arxiv_paper
 
-groq_client = Groq(api_key=os.environ["GROQ_API_KEY"])
+load_dotenv()
 
-SYSTEM_PROMPT = """You are a research assistant. Answer questions based ONLY on the provided research paper excerpts.
-If the answer is not in the context, say "I couldn't find this in the available papers."
-Always mention which paper/source your answer comes from."""
+client = Groq(api_key="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")
+
+# ✅ Use smaller model (VERY IMPORTANT)
+MODEL = "llama3-8b-8192"
+
+
+def is_answer_in_context(answer, context):
+    """
+    STRICT CHECK: ensures answer words exist in context
+    """
+    answer_words = set(answer.lower().split())
+    context_words = set(context.lower().split())
+
+    overlap = answer_words.intersection(context_words)
+
+    return len(overlap) / (len(answer_words) + 1) > 0.5
 
 
 def answer_query(user_query: str) -> dict:
-    # Step 1: try local retrieval first
-    candidates = retrieve(user_query, k_initial=20)
-    top_chunks = rerank(user_query, candidates, top_k=6)
 
-    auto_ingested = []
+    try:
+        # --------------------------
+        # STEP 1: REDUCED RETRIEVAL (LOW TOKEN USAGE)
+        # --------------------------
+        candidates = retrieve(user_query, k_initial=15)
 
-    # Step 2: if nothing found locally, search arxiv automatically
-    if not top_chunks:
-        try:
-            papers = search_arxiv_by_query(user_query, max_results=2)
-            for paper in papers:
-                try:
-                    ingest_arxiv_paper(paper["arxiv_id"])
-                    auto_ingested.append(paper["title"])
-                    time.sleep(2)  # wait between ingestions
-                except Exception as e:
-                    print(f"Failed to ingest {paper['arxiv_id']}: {e}")
-        except Exception as e:
-            print(f"ArXiv search failed: {e}")
+        if not candidates:
+            return {
+                "answer": "Answer not found in the provided document.",
+                "chunks_used": 0,
+                "initial_chunks": 0,
+                "filter_applied": {}
+            }
 
-        # retry retrieval after ingestion
-        if auto_ingested:
-            candidates = retrieve(user_query, k_initial=20)
-            top_chunks = rerank(user_query, candidates, top_k=6)
+        # --------------------------
+        # STEP 2: REDUCED RERANKING
+        # --------------------------
+        top_chunks = rerank(user_query, candidates, top_k=5)
 
-    # Step 3: if still nothing
-    if not top_chunks:
+        # --------------------------
+        # STEP 3: SMALL CONTEXT
+        # --------------------------
+        context = "\n\n".join([c["text"] for c in top_chunks])
+        filter_applied = candidates[0].get("filter_applied", {})
+
+        # --------------------------
+        # STEP 4: STRICT PROMPT
+        # --------------------------
+        prompt = f"""
+Extract the answer ONLY from the context.
+
+Rules:
+- Use ONLY sentences from context
+- Do NOT add new information
+- Do NOT explain
+- Do NOT generalize
+- Do NOT define anything
+
+If answer is not present:
+→ Respond EXACTLY:
+"Answer not found in the provided document."
+
+Context:
+{context}
+
+Question:
+{user_query}
+"""
+
+        # --------------------------
+        # STEP 5: API CALL WITH ERROR HANDLING
+        # --------------------------
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0
+        )
+
+        answer = response.choices[0].message.content.strip()
+
+        # --------------------------
+        # STEP 6: VALIDATION (NO HALLUCINATION)
+        # --------------------------
+        if not is_answer_in_context(answer, context):
+            answer = "Answer not found in the provided document."
+
+        # --------------------------
+        # RETURN
+        # --------------------------
         return {
-            "answer": "No relevant papers found even after searching ArXiv. Try rephrasing your query.",
-            "sources": [],
-            "filter_applied": {},
-            "chunks_used": 0,
-            "auto_ingested": [],
+            "answer": answer,
+            "filter_applied": filter_applied,
+            "chunks_used": len(top_chunks),
+            "initial_chunks": len(candidates)
         }
 
-    # Step 4: build context and generate answer
-    context = "\n\n---\n\n".join([
-        f"[{c['metadata'].get('source', 'Unknown')}]\n{c['text']}"
-        for c in top_chunks
-    ])
-
-    response = groq_client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {user_query}"},
-        ],
-        temperature=0.1,
-        max_tokens=1024,
-    )
-
-    sources = list({c["metadata"].get("source", "Unknown") for c in top_chunks})
-    filter_applied = candidates[0]["filter_applied"] if candidates else {}
-
-    return {
-        "answer": response.choices[0].message.content,
-        "sources": sources,
-        "filter_applied": filter_applied,
-        "chunks_used": len(top_chunks),
-        "auto_ingested": auto_ingested,
-    }
+    except Exception as e:
+        return {
+            "answer": "⚠️ Rate limit reached or API error. Please try again later.",
+            "chunks_used": 0,
+            "initial_chunks": 0,
+            "filter_applied": {}
+        }

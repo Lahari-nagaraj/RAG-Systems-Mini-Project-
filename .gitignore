@@ -1,19 +1,19 @@
-# Virtual environment
-venv/
-.env/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
+*.pyo
 
-# VS Code
-.vscode/
+# Virtual env
+ragvenv/
+venv/
+
+# Environment variables
+.env
+
+# FAISS files
+faiss_index.bin
+faiss_meta.npy
 
 # OS files
 .DS_Store
-
-# Logs
-*.log
-
-# PDFs (optional if you don't want them)
-*.pdf
+Thumbs.db

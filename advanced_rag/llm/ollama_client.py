@@ -1,15 +1,17 @@
-import requests
+import os
+from groq import Groq
 
-MODEL = "phi3"
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+MODEL = "llama-3.3-70b-versatile"
 
 def generate_response(prompt):
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        }
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0
     )
 
-    return response.json()["response"]
+    return response.choices[0].message.content.strip()

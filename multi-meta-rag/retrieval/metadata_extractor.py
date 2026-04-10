@@ -5,7 +5,8 @@ load_dotenv()
 
 from groq import Groq
 
-client = Groq(api_key=os.environ["GROQ_API_KEY"])
+client = Groq(api_key="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")
+
 
 EXTRACTION_PROMPT = """You are a metadata extractor for a research paper database.
 
