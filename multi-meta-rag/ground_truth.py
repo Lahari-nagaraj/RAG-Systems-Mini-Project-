@@ -1,9 +1,20 @@
 GROUND_TRUTH = {
-    "table 2": [
-        "mrr@10", "map@10", "hits@10",
-        "baseline", "multi-meta"
-    ],
-    "metrics": ["map", "mrr", "hits"],
+    "metrics": ["mrr", "map", "hits"],
+    "chunk retrieval": ["mrr", "map", "hits"],
+    "chunk size": ["256", "32"],
     "chunk": ["256", "32"],
-    "embedding": ["bge", "voyage"]
+    "embedding": ["bge", "voyage"],
+    "table 2": ["mrr@10", "map@10", "hits@10", "baseline", "multi-meta"],
+    "mrr": ["0.6748", "0.6574"],
+    "map@10": ["0.3388", "0.3293"],
+    "hits@10": ["0.9042", "0.8909"],
+    "accuracy": ["0.606", "0.608"],
+    "metadata": ["source", "published_at", "filter"],
+    "rerank": ["bge-reranker", "cross-encoder", "top-k"],
+    "voyage": ["0.6748", "0.9042"],
+    "bge": ["0.6574", "0.8909"],
+    "llm": ["gpt-4", "palm", "accuracy"],
+    "multi-hop": ["multihop", "multi-hop", "evidence"],
+    "retrieval augmented": ["rag", "retrieval", "chunks"],
+    "limitation": ["metadata", "inference", "prompt"],
 }

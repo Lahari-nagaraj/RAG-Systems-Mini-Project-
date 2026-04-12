@@ -11,3 +11,4 @@ streamlit==1.38.0
 python-dotenv==1.0.1
 requests==2.32.3
 faiss-cpu==1.13.2
+plotly==6.7.0
