@@ -6,7 +6,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 EMBEDDING_DIM = 384
 INDEX_FILE = "faiss_index.bin"
-META_FILE = "faiss_meta.npy"
+META_FILE  = "faiss_meta.npy"
 
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -17,10 +17,10 @@ else:
 
 if os.path.exists(META_FILE):
     data = np.load(META_FILE, allow_pickle=True).item()
-    stored_texts = list(data["texts"])
+    stored_texts    = list(data["texts"])
     stored_metadata = list(data["metadata"])
 else:
-    stored_texts = []
+    stored_texts    = []
     stored_metadata = []
 
 
@@ -30,9 +30,14 @@ def save_index():
 
 
 def ingest_pdf_file(text: str, metadata: dict) -> str:
+    # FIX: chunk_size=256, chunk_overlap=32 — paper §3.2 explicitly states these
+    #      values and notes that smaller overlap gives better variety in top-K.
+    #      Previous values (800 / 100) produced chunks 3× too large, hurting
+    #      MRR@K and Hit@K because each chunk covered too many topics at once.
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800, chunk_overlap=100,
-        separators=["\n\n", "\n", ". ", " "]
+        chunk_size=256,
+        chunk_overlap=32,
+        separators=["\n\n", "\n", ". ", " "],
     )
     chunks = splitter.split_text(text)
     embeddings = embedder.encode(chunks)
