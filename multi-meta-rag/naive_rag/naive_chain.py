@@ -1,10 +1,13 @@
+import os
 from groq import Groq
 from dotenv import load_dotenv
 from naive_rag.naive_retrieve import retrieve_naive
 
 load_dotenv()
 
-client = Groq(api_key="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")
+api_key = os.getenv("GROQ_API_KEY")
+
+client = Groq(api_key=api_key)
 MODEL  = "llama-3.1-8b-instant"
 
 

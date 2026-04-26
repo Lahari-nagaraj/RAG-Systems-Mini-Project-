@@ -60,7 +60,7 @@ def combined_score(ret_proxy: float, gen_acc) -> float:
 # ─────────────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Multi-Meta-RAG", layout="wide")
-st.title("📚 Multi-Meta-RAG — Research Paper Assistant")
+st.title("Multi-Meta-RAG — Research Paper Assistant")
 
 mode = st.radio("Choose Mode", ["Upload PDF", "Ask Questions"])
 
@@ -75,7 +75,7 @@ if mode == "Upload PDF":
 
     if st.button("Ingest PDF"):
         if uploaded:
-            with st.spinner("🔄 Ingesting PDF into both RAG systems…"):
+            with st.spinner("Ingesting PDF into both RAG systems…"):
                 with open("temp.pdf", "wb") as f:
                     f.write(uploaded.read())
                 doc  = fitz.open("temp.pdf")
@@ -87,8 +87,8 @@ if mode == "Upload PDF":
                 }
                 ingest_pdf_file(text, metadata)
                 naive_n = ingest_naive(text)
-            st.success("✅ Multi-Meta-RAG ingestion done")
-            st.success(f"✅ Naive RAG ingested {naive_n} chunks")
+            st.success("Multi-Meta-RAG ingestion done")
+            st.success("Naive RAG ingested chunks")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ASK QUESTIONS
@@ -97,7 +97,7 @@ elif mode == "Ask Questions":
     query = st.text_area("Your question:")
 
     if st.button("Ask"):
-        with st.spinner("🤖 Generating answers using both RAG systems…"):
+        with st.spinner("Generating answers using both RAG systems…"):
             meta_result  = answer_query(query)
             naive_result = naive_answer(query)
 
@@ -171,37 +171,37 @@ elif mode == "Ask Questions":
         # ════════════════════════════════════════════════════════════════════
         # ANSWERS SIDE BY SIDE
         # ════════════════════════════════════════════════════════════════════
-        st.markdown("## 💬 Answers")
+        st.markdown("## Answers")
         col_naive, col_meta = st.columns(2)
 
         with col_naive:
-            st.markdown("### 🔵 Naive RAG")
+            st.markdown("### Naive RAG")
             st.info(naive_ans)
             st.caption("Plain FAISS kNN — no metadata filter, no cross-encoder reranker.")
 
         with col_meta:
-            st.markdown("### 🟢 Multi-Meta-RAG")
+            st.markdown("### Multi-Meta-RAG")
             st.success(meta_ans)
             if "not found" not in meta_ans.lower():
                 chunks_used = meta_result.get("chunks_used", 0)
                 filter_info = meta_result.get("filter_applied", {})
                 if filter_info:
                     st.caption(
-                        f"📌 {chunks_used} reranked chunks — metadata filter active: `{filter_info}`"
+                        f" {chunks_used} reranked chunks — metadata filter active: `{filter_info}`"
                     )
                 else:
                     st.caption(
-                        f"📌 Top {chunks_used} reranked chunks — "
+                        f" Top {chunks_used} reranked chunks — "
                         "semantic similarity + cross-encoder reranking."
                     )
             else:
-                st.caption("📌 No matching content found in ingested documents.")
+                st.caption(" No matching content found in ingested documents.")
 
         # ════════════════════════════════════════════════════════════════════
         # EVALUATION PANEL
         # ════════════════════════════════════════════════════════════════════
         st.markdown("---")
-        st.markdown("## 📊 Live Evaluation — Paper Metrics (arXiv 2406.13213v2)")
+        st.markdown("## Live Evaluation — Paper Metrics (arXiv 2406.13213v2)")
 
         # ── Generation Accuracy ──────────────────────────────────────────────
         st.markdown("### Generation Accuracy *(§4.2 — word-overlap with gold answer)*")
@@ -210,10 +210,10 @@ elif mode == "Ask Questions":
             ga1, ga2 = st.columns(2)
             meta_gen_pct  = round(meta_gen_acc  * 100, 1)
             naive_gen_pct = round(naive_gen_acc * 100, 1) if naive_gen_acc is not None else None
-            ga1.metric("🟢 Multi-Meta-RAG", f"{meta_gen_pct}%")
+            ga1.metric(" Multi-Meta-RAG", f"{meta_gen_pct}%")
             delta_ga = round(meta_gen_pct - (naive_gen_pct or 0), 1)
             ga2.metric(
-                "🔵 Naive RAG",
+                " Naive RAG",
                 f"{naive_gen_pct}%" if naive_gen_pct is not None else "N/A",
                 delta=f"{delta_ga:+.1f}%" if naive_gen_pct is not None else None,
             )
@@ -240,7 +240,7 @@ elif mode == "Ask Questions":
         with tab_live:
             # Multi-Meta-RAG row
             st.markdown(
-                f"**🟢 Multi-Meta-RAG** — {meta_result.get('initial_chunks', 0)} candidates "
+                f"** Multi-Meta-RAG** — {meta_result.get('initial_chunks', 0)} candidates "
                 f"→ bge-reranker-large → top {meta_result.get('chunks_used', 0)} to LLM"
             )
             mc1, mc2, mc3, mc4 = st.columns(4)
@@ -253,7 +253,7 @@ elif mode == "Ask Questions":
 
             # Naive RAG row — delta shows Multi-Meta-RAG improvement
             st.markdown(
-                f"**🔵 Naive RAG** — {len(naive_all_ranked)} candidates → "
+                f"** Naive RAG** — {len(naive_all_ranked)} candidates → "
                 "plain FAISS kNN → top 5 to LLM"
             )
             nc1, nc2, nc3, nc4 = st.columns(4)
@@ -333,10 +333,10 @@ elif mode == "Ask Questions":
         naive_vals   = [naive_ret[m] for m in metric_names]
 
         fig_ret = go.Figure(data=[
-            go.Bar(name="🔵 Naive RAG",      x=metric_names, y=naive_vals,
+            go.Bar(name=" Naive RAG",      x=metric_names, y=naive_vals,
                    marker_color="#4C9BE8",
                    text=[f"{v:.4f}" for v in naive_vals], textposition="outside"),
-            go.Bar(name="🟢 Multi-Meta-RAG", x=metric_names, y=meta_vals,
+            go.Bar(name=" Multi-Meta-RAG", x=metric_names, y=meta_vals,
                    marker_color="#2ECC71",
                    text=[f"{v:.4f}" for v in meta_vals],  textposition="outside"),
         ])
@@ -358,8 +358,8 @@ elif mode == "Ask Questions":
         # ── Combined Score ───────────────────────────────────────────────────
         st.markdown("### Combined Score *(retrieval proxy + generation accuracy)*")
         cs1, cs2 = st.columns(2)
-        cs1.metric("🔵 Naive RAG",      f"{naive_pct}%")
-        cs2.metric("🟢 Multi-Meta-RAG", f"{meta_pct}%",
+        cs1.metric(" Naive RAG",      f"{naive_pct}%")
+        cs2.metric(" Multi-Meta-RAG", f"{meta_pct}%",
                    delta=f"{round(meta_pct - naive_pct, 1):+.1f}%")
 
         fig_comb = go.Figure(data=[
@@ -392,12 +392,12 @@ elif mode == "Ask Questions":
         )
 
         # ── Retrieved Chunks Inspector ───────────────────────────────────────
-        with st.expander("🔎 Inspect retrieved chunks (full ranked lists)"):
+        with st.expander(" Inspect retrieved chunks (full ranked lists)"):
             ci1, ci2 = st.columns(2)
 
             with ci1:
                 st.markdown(
-                    f"**🟢 Multi-Meta-RAG** — all {len(meta_all_ranked)} ranked "
+                    f"** Multi-Meta-RAG** — all {len(meta_all_ranked)} ranked "
                     f"(top {len(meta_top_chunks)} sent to LLM)"
                 )
                 for i, c in enumerate(meta_all_ranked, 1):
@@ -412,7 +412,7 @@ elif mode == "Ask Questions":
 
             with ci2:
                 st.markdown(
-                    f"**🔵 Naive RAG** — all {len(naive_all_ranked)} ranked "
+                    f"** Naive RAG** — all {len(naive_all_ranked)} ranked "
                     f"(top {len(naive_top_chunks)} sent to LLM)"
                 )
                 for i, c in enumerate(naive_all_ranked, 1):
@@ -425,38 +425,38 @@ elif mode == "Ask Questions":
                     st.divider()
 
         # ── Why this score ───────────────────────────────────────────────────
-        st.markdown("### 🔍 Why this score?")
+        st.markdown("###  Why this score?")
 
         if "not found" in meta_ans.lower():
             st.write(
-                "🟢 **Multi-Meta-RAG:** No relevant chunks found — "
+                " **Multi-Meta-RAG:** No relevant chunks found — "
                 "the question may be outside the ingested document's scope."
             )
         else:
             if filter_used:
                 st.write(
-                    f"🟢 **Multi-Meta-RAG:** Metadata filter `{meta_result.get('filter_applied')}` "
+                    f" **Multi-Meta-RAG:** Metadata filter `{meta_result.get('filter_applied')}` "
                     "narrowed the search space. Cross-encoder reranker scored all candidates "
                     "and selected the most relevant chunks."
                 )
             else:
                 st.write(
-                    "🟢 **Multi-Meta-RAG:** No metadata filter triggered — "
+                    " **Multi-Meta-RAG:** No metadata filter triggered — "
                     "answer grounded via semantic similarity + cross-encoder reranking."
                 )
 
         if "not found" in naive_ans.lower() or len(naive_ans) < 30:
-            st.write("🔵 **Naive RAG:** Weak or no answer retrieved from the index.")
+            st.write(" **Naive RAG:** Weak or no answer retrieved from the index.")
         elif len(naive_ans) > 100:
             st.write(
-                "🔵 **Naive RAG:** Answer generated from raw FAISS chunks — "
+                " **Naive RAG:** Answer generated from raw FAISS chunks — "
                 "no metadata filtering or reranking applied."
             )
         else:
-            st.write("🔵 **Naive RAG:** Partial answer; lacks strong document grounding.")
+            st.write(" **Naive RAG:** Partial answer; lacks strong document grounding.")
 
         if meta_result.get("filter_applied"):
-            st.info(f"🔎 Metadata filter applied: `{meta_result['filter_applied']}`")
+            st.info(f" Metadata filter applied: `{meta_result['filter_applied']}`")
 
         st.caption(
             f"Multi-Meta-RAG pipeline: {meta_result.get('initial_chunks', 0)} candidates "
