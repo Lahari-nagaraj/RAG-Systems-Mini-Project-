@@ -10,4 +10,4 @@ pypdf
 langchain-text-splitters
 transformers
 torch
-numpy
+
